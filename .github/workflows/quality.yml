@@ -1,0 +1,24 @@
+name: Flight-control contracts
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  protocol:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Build and test motor-link contracts
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_FLAGS='-Wall -Wextra -Wpedantic -Werror'
+          cmake --build build --parallel
+          ctest --test-dir build --output-on-failure

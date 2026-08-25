@@ -1,0 +1,18 @@
+[submodule "modules/attitudeMathLibrary"]
+	path = modules/attitudeMathLibrary
+	url = https://github.com/antshiv/attitudeMathLibrary.git
+[submodule "modules/stateEstimation"]
+	path = modules/stateEstimation
+	url = https://github.com/antshiv/stateEstimation.git
+[submodule "modules/controlSystems"]
+	path = modules/controlSystems
+	url = https://github.com/antshiv/controlSystems.git
+[submodule "modules/inertial_navigation_system"]
+	path = modules/inertial_navigation_system
+	url = https://github.com/antshiv/inertial_navigation_system.git
+[submodule "modules/motorDynamics"]
+	path = modules/motorDynamics
+	url = https://github.com/antshiv/motorDynamics.git
+[submodule "modules/dynamic_models"]
+	path = modules/dynamic_models
+	url = https://github.com/antshiv/dynamic_models.git
