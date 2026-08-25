@@ -24,7 +24,9 @@ int main(void) {
     }
 
     uint32_t sequence = 1u;
+    int64_t next_release_ms = k_uptime_get();
     for (;;) {
+        next_release_ms += COMMAND_PERIOD_MS;
         for (uint8_t motor = 0; motor < ASR_FC_MOTOR_COUNT; ++motor) {
             /* This image cannot arm a motor. Nonzero values exercise routing. */
             const asr_fc_motor_command_t command = {
@@ -44,6 +46,11 @@ int main(void) {
             }
             write_frame(frame, frame_size);
         }
-        k_sleep(K_MSEC(COMMAND_PERIOD_MS));
+        const int64_t remaining_ms = next_release_ms - k_uptime_get();
+        if (remaining_ms > 0) {
+            k_sleep(K_MSEC(remaining_ms));
+        } else {
+            next_release_ms = k_uptime_get();
+        }
     }
 }

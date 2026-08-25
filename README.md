@@ -14,4 +14,5 @@ cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ```
 
-See [the integration architecture](docs/architecture.md).
+See [the integration architecture](docs/architecture.md) and the
+[first disarmed hardware bring-up](docs/hil-bringup-2026-08-24.md).
