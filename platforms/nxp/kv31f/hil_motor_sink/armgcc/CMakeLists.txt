@@ -30,7 +30,6 @@ add_executable(${MCUX_SDK_PROJECT_NAME}
     ../src/main.c
     ${AsrRoot}/application/protocol/motor_link.c
     ${SdkRootDirPath}/examples/frdmkv31f/demo_apps/hello_world/pin_mux.c
-    ${SdkRootDirPath}/core/boards/frdmkv31f/board.c
     ${SdkRootDirPath}/core/boards/frdmkv31f/clock_config.c)
 target_include_directories(${MCUX_SDK_PROJECT_NAME} PRIVATE
     ../src
@@ -45,6 +44,7 @@ include(driver_clock)
 include(driver_common)
 include(driver_gpio)
 include(driver_port)
+include(driver_smc)
 include(device_CMSIS)
 include(device_startup)
 include(device_system)
