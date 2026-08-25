@@ -38,3 +38,46 @@ The stream parser consumes one byte at a time and does not expose a command
 until the complete versioned frame, bounded payload length, and CRC pass. UART
 noise, partial writes, and a corrupted frame therefore cannot reuse a previous
 throttle value through the decoder.
+
+## Own ESC path versus hobby PWM
+
+The nRF5340 can retain four conventional PWM outputs as a fallback for
+commercial hobby ESCs. That interface expresses a requested motor level through
+a pulse width; it does not give the flight controller direct ownership of
+commutation, current limiting, BEMF timing, or pre-driver faults.
+
+The Antshiv ESC path instead sends four independent Q15 motor requests over the
+motor link. The NXP node converts each accepted request into its own high-rate
+motor-control state. A quad-ESC is therefore one coordinated assembly containing
+four independent three-phase inverter channels, not one inverter electrically
+shared by four motors.
+
+## W530 USB bridge
+
+`asr_fc_hil_usb_bridge` is protocol-aware. It validates both directions and
+refuses armed or stale commands before forwarding bytes to the KV31F. Run it
+only after identifying stable `/dev/serial/by-id` paths for both boards:
+
+```bash
+cmake -S . -B build
+cmake --build build --parallel
+./build/asr_fc_hil_usb_bridge NRF_TTY KV31F_TTY
+```
+
+The first KV31F sink still contains no PWM or pre-driver code. Successful HIL
+at this stage means command routing, acknowledgement, corruption recovery, and
+timeout behavior work. It does not mean a motor has been controlled.
+
+## NXP four-motor reference
+
+The downloaded AN5169 software is a complete four-motor sensorless BLDC
+reference for the KV46. It contains separate `m1` through `m4` configuration
+and state-machine modules, shared BLDC control, startup, commutation,
+zero-crossing, pre-driver handling, and a prebuilt IAR image. Some mathematical
+components are supplied as NXP binary libraries.
+
+The separate Kinetis KV5x drone design archive contains the PCB Gerbers, not
+the source code. ASR-FC therefore uses AN5169 as behavioral reference evidence;
+it does not copy the application wholesale or represent it as KV31F/KV5x/
+RT1176-portable code. Portable motor contracts belong in `motorDynamics`, while
+each MCU and GD3000 implementation remains under `platforms/nxp`.

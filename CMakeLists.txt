@@ -9,6 +9,13 @@ target_compile_features(asr_fc_motor_link PUBLIC c_std_11)
 target_compile_options(asr_fc_motor_link PRIVATE
     $<$<C_COMPILER_ID:GNU,Clang>:-Wall;-Wextra;-Wpedantic;-Werror>)
 
+if(UNIX)
+    add_executable(asr_fc_hil_usb_bridge tools/hil_usb_bridge.c)
+    target_link_libraries(asr_fc_hil_usb_bridge PRIVATE asr_fc_motor_link)
+    target_compile_options(asr_fc_hil_usb_bridge PRIVATE
+        $<$<C_COMPILER_ID:GNU,Clang>:-Wall;-Wextra;-Wpedantic;-Werror>)
+endif()
+
 enable_testing()
 add_executable(motor_link_tests tests/test_motor_link.c)
 target_link_libraries(motor_link_tests PRIVATE asr_fc_motor_link)
