@@ -12,6 +12,7 @@ get_filename_component(AsrRoot "${CMAKE_CURRENT_SOURCE_DIR}/../../../../.."
 set(ProjDirPath "${CMAKE_CURRENT_SOURCE_DIR}")
 
 set(MCUX_SDK_PROJECT_NAME asr_fc_kv31f_hil_sink.elf)
+include(${ProjDirPath}/config.cmake)
 
 set(common_flags
     -DCPU_MKV31F512VLL12 -DFRDM_KV31F -DMCUXPRESSO_SDK
