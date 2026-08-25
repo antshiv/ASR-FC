@@ -1,6 +1,7 @@
-set(CMAKE_SYSTEM_NAME Generic)
 cmake_minimum_required(VERSION 3.16)
-enable_language(ASM)
+
+set(CMAKE_SYSTEM_NAME Generic)
+project(asr_fc_kv31f_hil_sink C ASM)
 
 if(NOT DEFINED ENV{SdkRootDirPath})
     message(FATAL_ERROR "SdkRootDirPath must reference the composed MCUX SDK")
@@ -10,7 +11,6 @@ get_filename_component(AsrRoot "${CMAKE_CURRENT_SOURCE_DIR}/../../../../.."
     ABSOLUTE)
 set(ProjDirPath "${CMAKE_CURRENT_SOURCE_DIR}")
 
-project(asr_fc_kv31f_hil_sink C ASM)
 set(MCUX_SDK_PROJECT_NAME asr_fc_kv31f_hil_sink.elf)
 
 set(common_flags
