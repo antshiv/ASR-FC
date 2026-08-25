@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #define ASR_FC_MOTOR_LINK_VERSION 1u
+#define ASR_FC_MOTOR_COUNT 4u
 #define ASR_FC_MOTOR_LINK_MAX_PAYLOAD 32u
 #define ASR_FC_MOTOR_LINK_HEADER_SIZE 10u
 #define ASR_FC_MOTOR_LINK_CRC_SIZE 2u

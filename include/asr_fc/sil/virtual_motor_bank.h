@@ -6,7 +6,6 @@
 
 #include "asr_fc/protocol/motor_link.h"
 
-#define ASR_FC_MOTOR_COUNT 4u
 #define ASR_FC_VIRTUAL_MOTOR_FAULT_COMMAND_TIMEOUT (1u << 0)
 #define ASR_FC_VIRTUAL_MOTOR_FAULT_SEQUENCE (1u << 1)
 #define ASR_FC_VIRTUAL_MOTOR_FAULT_SESSION (1u << 2)
