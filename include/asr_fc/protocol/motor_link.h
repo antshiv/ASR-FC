@@ -49,6 +49,22 @@ typedef struct {
     uint32_t acknowledged_sequence;
 } asr_fc_motor_telemetry_t;
 
+typedef struct {
+    uint8_t buffer[ASR_FC_MOTOR_LINK_MAX_FRAME_SIZE];
+    size_t size;
+    size_t expected_size;
+} asr_fc_motor_link_parser_t;
+
+void asr_fc_motor_link_parser_init(asr_fc_motor_link_parser_t *parser);
+
+asr_fc_motor_link_status_t asr_fc_motor_link_parser_push(
+    asr_fc_motor_link_parser_t *parser,
+    uint8_t byte,
+    uint8_t *frame,
+    size_t capacity,
+    size_t *frame_size,
+    bool *frame_ready);
+
 uint16_t asr_fc_motor_link_crc16(const uint8_t *data, size_t size);
 
 asr_fc_motor_link_status_t asr_fc_motor_link_encode_command(

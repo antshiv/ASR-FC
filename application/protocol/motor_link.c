@@ -28,6 +28,91 @@ static uint32_t get_u32(const uint8_t *in) {
         ((uint32_t)in[2] << 16) | ((uint32_t)in[3] << 24);
 }
 
+void asr_fc_motor_link_parser_init(asr_fc_motor_link_parser_t *parser) {
+    if (parser) {
+        memset(parser, 0, sizeof(*parser));
+    }
+}
+
+static void parser_resync(asr_fc_motor_link_parser_t *parser, uint8_t byte) {
+    asr_fc_motor_link_parser_init(parser);
+    if (byte == ASR_FC_MAGIC_0) {
+        parser->buffer[0] = byte;
+        parser->size = 1u;
+    }
+}
+
+asr_fc_motor_link_status_t asr_fc_motor_link_parser_push(
+    asr_fc_motor_link_parser_t *parser,
+    uint8_t byte,
+    uint8_t *frame,
+    size_t capacity,
+    size_t *frame_size,
+    bool *frame_ready) {
+    if (!parser || !frame || !frame_size || !frame_ready) {
+        return ASR_FC_MOTOR_LINK_NULL_POINTER;
+    }
+    *frame_ready = false;
+    *frame_size = 0u;
+
+    if (parser->size == 0u) {
+        parser_resync(parser, byte);
+        return ASR_FC_MOTOR_LINK_OK;
+    }
+    if (parser->size == 1u) {
+        if (byte != ASR_FC_MAGIC_1) {
+            parser_resync(parser, byte);
+            return ASR_FC_MOTOR_LINK_OK;
+        }
+        parser->buffer[parser->size++] = byte;
+        return ASR_FC_MOTOR_LINK_OK;
+    }
+    if (parser->size >= sizeof(parser->buffer)) {
+        parser_resync(parser, byte);
+        return ASR_FC_MOTOR_LINK_INVALID_FRAME;
+    }
+    parser->buffer[parser->size++] = byte;
+
+    if (parser->size == ASR_FC_MOTOR_LINK_HEADER_SIZE) {
+        const uint16_t payload_size = get_u16(&parser->buffer[4]);
+        const uint8_t type = parser->buffer[3];
+        if (parser->buffer[2] != ASR_FC_MOTOR_LINK_VERSION) {
+            parser_resync(parser, byte);
+            return ASR_FC_MOTOR_LINK_VERSION_MISMATCH;
+        }
+        if (payload_size > ASR_FC_MOTOR_LINK_MAX_PAYLOAD ||
+            type < ASR_FC_MOTOR_LINK_COMMAND ||
+            type > ASR_FC_MOTOR_LINK_HEARTBEAT) {
+            parser_resync(parser, byte);
+            return ASR_FC_MOTOR_LINK_INVALID_FRAME;
+        }
+        parser->expected_size = ASR_FC_MOTOR_LINK_HEADER_SIZE +
+            payload_size + ASR_FC_MOTOR_LINK_CRC_SIZE;
+    }
+    if (parser->expected_size == 0u ||
+        parser->size < parser->expected_size) {
+        return ASR_FC_MOTOR_LINK_OK;
+    }
+
+    const size_t complete_size = parser->expected_size;
+    const uint16_t expected_crc = get_u16(
+        &parser->buffer[complete_size - ASR_FC_MOTOR_LINK_CRC_SIZE]);
+    if (asr_fc_motor_link_crc16(parser->buffer,
+            complete_size - ASR_FC_MOTOR_LINK_CRC_SIZE) != expected_crc) {
+        parser_resync(parser, byte);
+        return ASR_FC_MOTOR_LINK_CRC_FAILURE;
+    }
+    if (capacity < complete_size) {
+        asr_fc_motor_link_parser_init(parser);
+        return ASR_FC_MOTOR_LINK_BUFFER_TOO_SMALL;
+    }
+    memcpy(frame, parser->buffer, complete_size);
+    *frame_size = complete_size;
+    *frame_ready = true;
+    asr_fc_motor_link_parser_init(parser);
+    return ASR_FC_MOTOR_LINK_OK;
+}
+
 uint16_t asr_fc_motor_link_crc16(const uint8_t *data, size_t size) {
     if (!data && size != 0u) {
         return 0u;

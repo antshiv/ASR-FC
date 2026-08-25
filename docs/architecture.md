@@ -33,3 +33,8 @@ CEVA + sensors
 The W530 USB bridge is a validation transport, not the production flight link.
 The eventual physical transport can be UART, SPI, or an external CAN-FD
 controller without changing the encoded command and telemetry contracts.
+
+The stream parser consumes one byte at a time and does not expose a command
+until the complete versioned frame, bounded payload length, and CRC pass. UART
+noise, partial writes, and a corrupted frame therefore cannot reuse a previous
+throttle value through the decoder.

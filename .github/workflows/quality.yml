@@ -22,3 +22,14 @@ jobs:
             -DCMAKE_C_FLAGS='-Wall -Wextra -Wpedantic -Werror'
           cmake --build build --parallel
           ctest --test-dir build --output-on-failure
+
+  embedded-protocol:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Arm GNU toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi
+      - name: Compile protocol for both MCU families
+        run: sh scripts/check_embedded_protocol.sh
