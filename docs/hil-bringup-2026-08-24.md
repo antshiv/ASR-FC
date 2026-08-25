@@ -31,5 +31,19 @@ therefore released each motor command at roughly 33 Hz rather than the intended
 50 Hz. The command source was changed to use a fixed 20 ms release schedule so
 serialization time is included in, rather than added to, the period.
 
+The repeated four-second capture after that correction produced:
+
+| Evidence | Result |
+|---|---:|
+| Validated commands forwarded | 799 |
+| Motor-zero acknowledgements | 199 |
+| Approximate aggregate command rate | 200 commands/s |
+| Approximate selected-motor rate | 50 commands/s |
+| Armed commands rejected | 0 |
+| Stale commands rejected | 0 |
+| Invalid frames | 0 |
+| KV31F reported duty | 0 |
+| KV31F fault state | `0x80000000` (`OUTPUT_INHIBITED`) |
+
 This gate proves the framed digital boundary and output inhibition. It does not
 prove commutation, GD3000 operation, motor control, or flight readiness.
