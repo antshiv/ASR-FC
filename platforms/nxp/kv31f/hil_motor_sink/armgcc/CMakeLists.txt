@@ -18,7 +18,7 @@ set(common_flags
     -DCPU_MKV31F512VLL12 -DFRDM_KV31F -DMCUXPRESSO_SDK
     -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
     -ffreestanding -fno-builtin -ffunction-sections -fdata-sections
-    -Wall -Wextra -Wpedantic -Werror -std=c11)
+    -Wall -Wextra -Wpedantic -Werror -Wno-error=unused-parameter -std=c11)
 add_compile_options(${common_flags})
 add_link_options(
     -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
