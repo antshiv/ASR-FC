@@ -17,11 +17,14 @@ jobs:
         with:
           submodules: recursive
       - name: Build and test motor-link contracts
-        run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug \
-            -DCMAKE_C_FLAGS='-Wall -Wextra -Wpedantic -Werror'
-          cmake --build build --parallel
-          ctest --test-dir build --output-on-failure
+        env:
+          ASR_FC_ENABLE_SANITIZERS: ON
+        run: scripts/run_validation.sh artifacts/pull-request
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: asr-fc-pull-request-evidence
+          path: artifacts/pull-request
 
   embedded-protocol:
     runs-on: ubuntu-latest

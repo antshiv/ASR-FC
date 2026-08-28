@@ -16,3 +16,6 @@
 [submodule "modules/dynamic_models"]
 	path = modules/dynamic_models
 	url = https://github.com/antshiv/dynamic_models.git
+[submodule "modules/ceva_sh2"]
+	path = modules/ceva_sh2
+	url = https://github.com/ceva-dsp/sh2.git

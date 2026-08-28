@@ -34,6 +34,26 @@ The W530 USB bridge is a validation transport, not the production flight link.
 The eventual physical transport can be UART, SPI, or an external CAN-FD
 controller without changing the encoded command and telemetry contracts.
 
+## Attitude and aiding ownership
+
+The CEVA FSM300 owns the primary inertial attitude estimate. Its scalar-first
+quaternion and calibrated angular rates enter the flight core directly; ASR-FC
+does not run a second attitude Kalman filter over the same measurements by
+default. The checked quaternion PID then produces body torque, and the
+geometry-based mixer converts torque plus collective thrust into four bounded
+rotor requests.
+
+Barometer, ToF, GNSS, optical flow, and later vision are separate aiding
+sources. They can activate `stateEstimation` only through the explicit aiding
+callback in `flight_core.h`. With no enabled and valid aiding mask, that code is
+not called. A missing callback, stale CEVA frame, repeated sequence, invalid
+quaternion, invalid timing interval, or numerical failure produces zero motor
+requests and a failsafe state.
+
+The nRF5340 benchmark compiles this portable path without PWM or a motor-link
+driver. Live CEVA acquisition and motor output remain independent validation
+gates so a successful controller benchmark cannot accidentally energize an ESC.
+
 The stream parser consumes one byte at a time and does not expose a command
 until the complete versioned frame, bounded payload length, and CRC pass. UART
 noise, partial writes, and a corrupted frame therefore cannot reuse a previous

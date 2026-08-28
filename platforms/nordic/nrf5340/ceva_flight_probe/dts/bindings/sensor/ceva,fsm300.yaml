@@ -1,0 +1,5 @@
+description: CEVA FSM300 sensor hub using the SH-2 protocol over SPI
+
+compatible: "ceva,fsm300"
+
+include: spi-device.yaml
