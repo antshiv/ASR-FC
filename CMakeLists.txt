@@ -32,6 +32,15 @@ target_compile_options(asr_fc_flight_core PRIVATE
     $<$<C_COMPILER_ID:GNU,Clang>:-Wall;-Wextra;-Wpedantic;-Werror>)
 target_link_libraries(asr_fc_flight_core PUBLIC m)
 
+add_library(asr_fc_hil_endpoint STATIC
+    application/hil/flight_endpoint.c)
+target_include_directories(asr_fc_hil_endpoint PUBLIC include)
+target_compile_features(asr_fc_hil_endpoint PUBLIC c_std_11)
+target_compile_options(asr_fc_hil_endpoint PRIVATE
+    $<$<C_COMPILER_ID:GNU,Clang>:-Wall;-Wextra;-Wpedantic;-Werror>)
+target_link_libraries(asr_fc_hil_endpoint PUBLIC
+    asr_fc_motor_link asr_fc_flight_core)
+
 if(UNIX)
     add_executable(asr_fc_hil_usb_bridge tools/hil_usb_bridge.c)
     target_link_libraries(asr_fc_hil_usb_bridge PRIVATE asr_fc_motor_link)
@@ -75,3 +84,9 @@ target_link_libraries(hil_link_tests PRIVATE asr_fc_motor_link m)
 target_compile_options(hil_link_tests PRIVATE
     $<$<C_COMPILER_ID:GNU,Clang>:-Wall;-Wextra;-Wpedantic;-Werror>)
 add_test(NAME hil_link_tests COMMAND hil_link_tests)
+
+add_executable(hil_flight_endpoint_tests tests/test_hil_flight_endpoint.c)
+target_link_libraries(hil_flight_endpoint_tests PRIVATE asr_fc_hil_endpoint)
+target_compile_options(hil_flight_endpoint_tests PRIVATE
+    $<$<C_COMPILER_ID:GNU,Clang>:-Wall;-Wextra;-Wpedantic;-Werror>)
+add_test(NAME hil_flight_endpoint_tests COMMAND hil_flight_endpoint_tests)

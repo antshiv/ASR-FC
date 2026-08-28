@@ -7,6 +7,7 @@ set(ASR_FC_ROOT ${CMAKE_CURRENT_LIST_DIR}/../../../..)
 
 target_sources(app PRIVATE
     src/main.c
+    ${ASR_FC_ROOT}/application/hil/flight_endpoint.c
     ${ASR_FC_ROOT}/application/protocol/hil_link.c
     ${ASR_FC_ROOT}/application/protocol/motor_link.c
     ${ASR_FC_ROOT}/application/flight/flight_core.c

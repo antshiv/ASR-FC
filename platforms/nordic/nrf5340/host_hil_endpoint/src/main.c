@@ -1,4 +1,4 @@
-#include "asr_fc/flight/flight_core.h"
+#include "asr_fc/hil/flight_endpoint.h"
 #include "asr_fc/protocol/hil_link.h"
 
 #include <string.h>
@@ -14,8 +14,7 @@ BUILD_ASSERT(ASR_FC_PHYSICAL_OUTPUTS_ENABLED == 0,
 
 static const struct device *const hil_uart = DEVICE_DT_GET(DT_NODELABEL(uart0));
 static asr_fc_hil_parser_t parser;
-static asr_fc_flight_core_t flight_core;
-static uint32_t active_session;
+static asr_fc_hil_flight_endpoint_t endpoint;
 
 static asr_fc_flight_config_t flight_config(void) {
     asr_fc_flight_config_t config = {
@@ -52,7 +51,8 @@ static asr_fc_flight_config_t flight_config(void) {
 
 static bool reset_flight_core(void) {
     const asr_fc_flight_config_t config = flight_config();
-    return asr_fc_flight_init(&flight_core, &config) == ASR_FC_STEP_OK;
+    return asr_fc_hil_flight_endpoint_init(&endpoint, &config) ==
+        ASR_FC_STEP_OK;
 }
 
 static void write_frame(const uint8_t *frame, size_t frame_size) {
@@ -61,87 +61,19 @@ static void write_frame(const uint8_t *frame, size_t frame_size) {
     }
 }
 
-static void copy_float_to_double(double *output, const float *input,
-                                 size_t count) {
-    for (size_t index = 0u; index < count; ++index) {
-        output[index] = input[index];
-    }
-}
-
-static void copy_double_to_float(float *output, const double *input,
-                                 size_t count) {
-    for (size_t index = 0u; index < count; ++index) {
-        output[index] = (float)input[index];
-    }
-}
-
 static void process_frame(const uint8_t *frame, size_t frame_size) {
     uint32_t sequence = 0u;
-    asr_fc_hil_sensor_guidance_t request;
-    if (asr_fc_hil_decode_sensor_guidance(
-            frame, frame_size, &sequence, &request) != ASR_FC_HIL_OK) {
-        asr_fc_flight_disarm(&flight_core);
+    timing_t started = timing_counter_get();
+    asr_fc_hil_flight_output_t response;
+    const asr_fc_hil_status_t status = asr_fc_hil_flight_endpoint_step(
+        &endpoint, frame, frame_size,
+        (uint64_t)k_uptime_get() * 1000u, &sequence, &response);
+    timing_t finished = timing_counter_get();
+    if (status != ASR_FC_HIL_OK) {
         return;
     }
-    if (request.session_id != active_session) {
-        if (!reset_flight_core()) {
-            return;
-        }
-        active_session = request.session_id;
-    }
-
-    asr_fc_ceva_sample_t sample = {
-        .sequence = sequence,
-        .timestamp_us = request.sensor_timestamp_us,
-        .accuracy = request.sensor_accuracy,
-        .attitude_valid = true,
-    };
-    copy_float_to_double(sample.quaternion, request.quaternion, 4u);
-    copy_float_to_double(sample.angular_rate, request.angular_rate, 3u);
-    copy_float_to_double(sample.linear_acceleration,
-                         request.linear_acceleration, 3u);
-
-    asr_fc_guidance_t guidance = {
-        .collective_thrust_n = request.collective_thrust_n,
-        .arm_requested = request.arm_requested,
-    };
-    copy_float_to_double(guidance.quaternion,
-                         request.guidance_quaternion, 4u);
-    copy_float_to_double(guidance.angular_rate,
-                         request.guidance_angular_rate, 3u);
-
-    asr_fc_flight_output_t output;
-    timing_t started = timing_counter_get();
-    const asr_fc_step_result_t step = asr_fc_flight_step(
-        &flight_core, &sample, NULL, &guidance,
-        request.sensor_timestamp_us, &output);
-    timing_t finished = timing_counter_get();
-
-    asr_fc_hil_flight_output_t response = {
-        .session_id = request.session_id,
-        .acknowledged_sequence = sequence,
-        .device_timestamp_us = k_cyc_to_us_floor32(k_cycle_get_32()),
-        .execution_time_us = (uint32_t)timing_cycles_to_ns(
-            timing_cycles_get(&started, &finished)) / 1000u,
-        .fault_flags = step == ASR_FC_STEP_OK ? 0u : (1u << (uint32_t)step),
-        .active_aiding_mask = output.active_aiding_mask,
-        .step_result = (uint8_t)step,
-        .flight_state = (uint8_t)output.state,
-        .collective_thrust_n = (float)output.actuator.collective_thrust,
-    };
-    memcpy(response.motor_q15, output.motor_q15,
-           sizeof(response.motor_q15));
-    copy_double_to_float(response.motor_speed_rad_s,
-                         output.motor_speed_rad_s, 4u);
-    copy_double_to_float(response.body_torque_nm,
-                         output.actuator.body_torque, 3u);
-    memcpy(response.observed_quaternion, request.quaternion,
-           sizeof(response.observed_quaternion));
-    memcpy(response.observed_angular_rate, request.angular_rate,
-           sizeof(response.observed_angular_rate));
-    memcpy(response.observed_linear_acceleration,
-           request.linear_acceleration,
-           sizeof(response.observed_linear_acceleration));
+    response.execution_time_us = (uint32_t)timing_cycles_to_ns(
+        timing_cycles_get(&started, &finished)) / 1000u;
 
     uint8_t encoded[ASR_FC_HIL_MAX_FRAME_SIZE];
     size_t encoded_size = 0u;
@@ -150,7 +82,7 @@ static void process_frame(const uint8_t *frame, size_t frame_size) {
             &encoded_size) == ASR_FC_HIL_OK) {
         write_frame(encoded, encoded_size);
     } else {
-        asr_fc_flight_disarm(&flight_core);
+        asr_fc_flight_disarm(&endpoint.flight_core);
     }
 }
 
@@ -174,7 +106,7 @@ int main(void) {
         const asr_fc_hil_status_t status = asr_fc_hil_parser_push(
             &parser, byte, frame, sizeof(frame), &frame_size, &frame_ready);
         if (status != ASR_FC_HIL_OK) {
-            asr_fc_flight_disarm(&flight_core);
+            asr_fc_flight_disarm(&endpoint.flight_core);
             continue;
         }
         if (frame_ready) {
