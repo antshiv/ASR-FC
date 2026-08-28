@@ -7,6 +7,7 @@ mkdir -p "$out_dir"
 
 for cpu in cortex-m4 cortex-m33; do
     for source in application/protocol/motor_link.c \
+                  application/protocol/hil_link.c \
                   application/sil/virtual_motor_bank.c; do
         object="$out_dir/${cpu}-$(basename "${source%.c}").o"
         "$cc" \

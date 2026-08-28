@@ -9,6 +9,7 @@ endif()
 
 add_library(asr_fc_motor_link STATIC
     application/protocol/motor_link.c
+    application/protocol/hil_link.c
     application/sil/virtual_motor_bank.c
     platforms/nxp/common/gd3000_protocol.c)
 target_include_directories(asr_fc_motor_link PUBLIC include)
@@ -68,3 +69,9 @@ target_link_libraries(ceva_fsm300_adapter_tests PRIVATE asr_fc_flight_core)
 target_compile_options(ceva_fsm300_adapter_tests PRIVATE
     $<$<C_COMPILER_ID:GNU,Clang>:-Wall;-Wextra;-Wpedantic;-Werror>)
 add_test(NAME ceva_fsm300_adapter_tests COMMAND ceva_fsm300_adapter_tests)
+
+add_executable(hil_link_tests tests/test_hil_link.c)
+target_link_libraries(hil_link_tests PRIVATE asr_fc_motor_link m)
+target_compile_options(hil_link_tests PRIVATE
+    $<$<C_COMPILER_ID:GNU,Clang>:-Wall;-Wextra;-Wpedantic;-Werror>)
+add_test(NAME hil_link_tests COMMAND hil_link_tests)
