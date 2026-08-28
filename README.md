@@ -14,6 +14,15 @@ cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ```
 
+Run the same sanitizer-enabled harness used by pull requests and nightly CI:
+
+```bash
+scripts/run_validation.sh
+```
+
+The harness writes compiler, submodule, runner-hardware, build-log, and JUnit
+evidence under `artifacts/validation/`.
+
 See [the integration architecture](docs/architecture.md) and the
 [first disarmed hardware bring-up](docs/hil-bringup-2026-08-24.md). The
 [nRF5340 closed-loop SIL gate](docs/nrf5340-flight-loop-2026-08-26.md) records

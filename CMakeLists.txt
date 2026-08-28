@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
 project(asr_fc VERSION 0.1.0 LANGUAGES C)
 
+option(ASR_FC_ENABLE_SANITIZERS "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
+if(ASR_FC_ENABLE_SANITIZERS AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    add_compile_options(-fno-omit-frame-pointer -fsanitize=address,undefined)
+    add_link_options(-fsanitize=address,undefined)
+endif()
+
 add_library(asr_fc_motor_link STATIC
     application/protocol/motor_link.c
     application/sil/virtual_motor_bank.c
@@ -32,7 +38,7 @@ if(UNIX)
         $<$<C_COMPILER_ID:GNU,Clang>:-Wall;-Wextra;-Wpedantic;-Werror>)
 endif()
 
-enable_testing()
+include(CTest)
 add_executable(motor_link_tests tests/test_motor_link.c)
 target_link_libraries(motor_link_tests PRIVATE asr_fc_motor_link)
 target_compile_options(motor_link_tests PRIVATE

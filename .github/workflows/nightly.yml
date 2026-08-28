@@ -1,0 +1,48 @@
+name: Nightly flight-control evidence
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-contracts:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ${{ matrix.compiler }}
+      - name: Run instrumented validation
+        env:
+          CC: ${{ matrix.compiler }}
+          ASR_FC_ENABLE_SANITIZERS: ON
+        run: scripts/run_validation.sh artifacts/nightly-${{ matrix.compiler }}
+      - name: Publish job summary
+        run: cat artifacts/nightly-${{ matrix.compiler }}/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: asr-fc-nightly-${{ matrix.compiler }}
+          path: artifacts/nightly-${{ matrix.compiler }}
+          retention-days: 30
+
+  embedded-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Arm GNU toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi
+      - name: Compile transport contracts for Cortex-M4 and Cortex-M33
+        run: scripts/check_embedded_protocol.sh
