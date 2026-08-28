@@ -15,4 +15,6 @@ ctest --test-dir build --output-on-failure
 ```
 
 See [the integration architecture](docs/architecture.md) and the
-[first disarmed hardware bring-up](docs/hil-bringup-2026-08-24.md).
+[first disarmed hardware bring-up](docs/hil-bringup-2026-08-24.md). The
+[nRF5340 closed-loop SIL gate](docs/nrf5340-flight-loop-2026-08-26.md) records
+the first measured controller, mixer, and rigid-body loop on the physical MCU.

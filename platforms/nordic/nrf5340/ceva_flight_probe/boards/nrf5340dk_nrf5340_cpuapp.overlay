@@ -1,0 +1,67 @@
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/pinctrl/nrf-pinctrl.h>
+
+/ {
+    fsm_control {
+        compatible = "gpio-leds";
+
+        fsm_reset: fsm_reset {
+            gpios = <&gpio0 5 GPIO_ACTIVE_LOW>;
+        };
+        fsm_boot: fsm_boot {
+            gpios = <&gpio1 10 GPIO_ACTIVE_HIGH>;
+        };
+        fsm_wake: fsm_wake {
+            gpios = <&gpio1 11 GPIO_ACTIVE_LOW>;
+        };
+    };
+
+    fsm_interrupts {
+        compatible = "gpio-keys";
+
+        fsm_int: fsm_int {
+            gpios = <&gpio0 4 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+        };
+    };
+
+    aliases {
+        fsm-reset = &fsm_reset;
+        fsm-boot = &fsm_boot;
+        fsm-wake = &fsm_wake;
+        fsm-int = &fsm_int;
+    };
+};
+
+&pinctrl {
+    fsm_spi_default: fsm_spi_default {
+        group1 {
+            psels = <NRF_PSEL(SPIM_SCK, 0, 6)>,
+                    <NRF_PSEL(SPIM_MOSI, 0, 7)>,
+                    <NRF_PSEL(SPIM_MISO, 0, 25)>;
+        };
+    };
+
+    fsm_spi_sleep: fsm_spi_sleep {
+        group1 {
+            psels = <NRF_PSEL(SPIM_SCK, 0, 6)>,
+                    <NRF_PSEL(SPIM_MOSI, 0, 7)>,
+                    <NRF_PSEL(SPIM_MISO, 0, 25)>;
+            low-power-enable;
+        };
+    };
+};
+
+&spi4 {
+    compatible = "nordic,nrf-spim";
+    status = "okay";
+    pinctrl-0 = <&fsm_spi_default>;
+    pinctrl-1 = <&fsm_spi_sleep>;
+    pinctrl-names = "default", "sleep";
+    cs-gpios = <&gpio0 26 GPIO_ACTIVE_LOW>;
+
+    fsm300: fsm300@0 {
+        compatible = "ceva,fsm300";
+        reg = <0>;
+        spi-max-frequency = <500000>;
+    };
+};
