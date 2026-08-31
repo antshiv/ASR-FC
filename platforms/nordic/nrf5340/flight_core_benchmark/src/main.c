@@ -125,6 +125,7 @@ int main(void) {
         asr_fc_ceva_sample_t sample = {
             .sequence = index + 1u,
             .timestamp_us = (uint64_t)(index + 1u) * SAMPLE_PERIOD_US,
+            .received_at_us = (uint64_t)(index + 1u) * SAMPLE_PERIOD_US + 100u,
             .linear_acceleration = {0.0, 0.0, 0.0},
             .accuracy = 3u,
             .attitude_valid = true,
@@ -137,7 +138,7 @@ int main(void) {
         timing_t loop_start = timing_counter_get();
         timing_t control_start = timing_counter_get();
         const asr_fc_step_result_t result = asr_fc_flight_step(
-            &core, &sample, NULL, &guidance, sample.timestamp_us + 100u,
+            &core, &sample, NULL, &guidance, sample.received_at_us,
             &output);
         timing_t control_end = timing_counter_get();
         if (result != ASR_FC_STEP_OK) {

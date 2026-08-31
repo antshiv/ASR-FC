@@ -66,6 +66,7 @@ asr_fc_hil_status_t asr_fc_hil_flight_endpoint_step(
     asr_fc_ceva_sample_t sample = {
         .sequence = *sequence,
         .timestamp_us = request.sensor_timestamp_us,
+        .received_at_us = device_timestamp_us,
         .accuracy = request.sensor_accuracy,
         .attitude_valid = true,
     };
@@ -86,7 +87,7 @@ asr_fc_hil_status_t asr_fc_hil_flight_endpoint_step(
     asr_fc_flight_output_t output;
     const asr_fc_step_result_t step = asr_fc_flight_step(
         &endpoint->flight_core, &sample, NULL, &guidance,
-        request.sensor_timestamp_us, &output);
+        device_timestamp_us, &output);
 
     *response = (asr_fc_hil_flight_output_t){
         .session_id = request.session_id,

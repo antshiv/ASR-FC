@@ -5,6 +5,11 @@ reports, validates their age and timestamp skew, and feeds complete samples to
 the portable flight core. The initial measured attitude becomes the dry-run
 setpoint; moving the board produces virtual mixer commands in the serial log.
 
+Sensor time and nRF host time are separate contracts. CEVA timestamps order
+reports, bound quaternion/gyro skew, and determine controller `dt`. A 64-bit
+nRF uptime timestamp records when each report arrived and determines
+freshness. The flight path never subtracts one clock domain from the other.
+
 The image cannot energize hardware. Its devicetree has no PWM node, its build
 contains no ESC or motor-link implementation, and a compile-time assertion
 keeps `ASR_FC_PHYSICAL_OUTPUTS_ENABLED` at zero. "Armed" flight-core state in

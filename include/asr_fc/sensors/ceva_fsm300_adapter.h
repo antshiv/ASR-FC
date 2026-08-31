@@ -34,6 +34,8 @@ typedef struct {
     double last_emitted_quaternion[4];
     uint64_t quaternion_timestamp_us;
     uint64_t gyro_timestamp_us;
+    uint64_t quaternion_received_at_us;
+    uint64_t gyro_received_at_us;
     uint64_t emitted_quaternion_timestamp_us;
     uint64_t emitted_gyro_timestamp_us;
     uint32_t sequence;
@@ -51,12 +53,14 @@ asr_fc_ceva_adapter_result_t asr_fc_ceva_adapter_update_rotation(
     asr_fc_ceva_adapter_t *adapter,
     const double quaternion_scalar_first[4],
     uint8_t accuracy,
-    uint64_t timestamp_us);
+    uint64_t sensor_timestamp_us,
+    uint64_t received_at_us);
 
 asr_fc_ceva_adapter_result_t asr_fc_ceva_adapter_update_gyro(
     asr_fc_ceva_adapter_t *adapter,
     const double angular_rate_rad_s[3],
-    uint64_t timestamp_us);
+    uint64_t sensor_timestamp_us,
+    uint64_t received_at_us);
 
 asr_fc_ceva_adapter_result_t asr_fc_ceva_adapter_take_sample(
     asr_fc_ceva_adapter_t *adapter,

@@ -50,6 +50,12 @@ not called. A missing callback, stale CEVA frame, repeated sequence, invalid
 quaternion, invalid timing interval, or numerical failure produces zero motor
 requests and a failsafe state.
 
+Every inertial sample carries both sensor time and host receipt time. Sensor
+time owns report ordering and control-loop `dt`; host monotonic time owns
+freshness and timeouts. Keeping these domains explicit prevents a sensor clock
+origin, transport delay, or 32-bit hardware-cycle wrap from creating a false
+stale-sensor fault.
+
 The nRF5340 benchmark compiles this portable path without PWM or a motor-link
 driver. Live CEVA acquisition and motor output remain independent validation
 gates so a successful controller benchmark cannot accidentally energize an ESC.

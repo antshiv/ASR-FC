@@ -41,6 +41,25 @@ This proves the live sensor-to-controller software path. It does not prove
 axis correctness, estimator accuracy, controller tuning, ESC timing, motor
 control, or flight readiness.
 
+## Clock-domain hardening - 2026-08-31
+
+The original probe used the 32-bit nRF cycle counter as host time and compared
+it directly with CEVA timestamps. At the application-core clock rate, that
+counter wraps in about 33.5 seconds; the two timestamps also do not share an
+origin. The sample contract now carries CEVA sensor time for ordering and
+controller `dt`, plus 64-bit nRF uptime at receipt for freshness and timeouts.
+
+The corrected image was rebuilt with nRF Connect SDK 2.4.2, erased, flashed,
+verified, and reset. A 65-second serial capture continued beyond the previous
+wrap boundary and reached:
+
+```text
+ASR_FC_CEVA_HEALTH decoded=3604 complete=1802 rejected=0 physical_outputs=0
+```
+
+Every sampled controller result in the capture remained `step=0`. The image
+used 47,264 bytes of flash (4.51%) and 20,576 bytes of RAM (4.49%).
+
 ## Reproduction
 
 ```bash

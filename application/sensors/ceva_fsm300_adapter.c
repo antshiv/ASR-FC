@@ -44,15 +44,17 @@ asr_fc_ceva_adapter_result_t asr_fc_ceva_adapter_update_rotation(
     asr_fc_ceva_adapter_t *adapter,
     const double quaternion_scalar_first[4],
     uint8_t accuracy,
-    uint64_t timestamp_us) {
+    uint64_t sensor_timestamp_us,
+    uint64_t received_at_us) {
     if (adapter == NULL || quaternion_scalar_first == NULL) {
         return ASR_FC_CEVA_ADAPTER_INVALID_ARGUMENT;
     }
-    if (!finite_vector(quaternion_scalar_first, 4u) || timestamp_us == 0u) {
+    if (!finite_vector(quaternion_scalar_first, 4u) ||
+        sensor_timestamp_us == 0u || received_at_us == 0u) {
         return ASR_FC_CEVA_ADAPTER_INVALID_VALUE;
     }
     if (adapter->has_quaternion &&
-        timestamp_us <= adapter->quaternion_timestamp_us) {
+        sensor_timestamp_us <= adapter->quaternion_timestamp_us) {
         return ASR_FC_CEVA_ADAPTER_REPEATED_REPORT;
     }
 
@@ -70,7 +72,8 @@ asr_fc_ceva_adapter_result_t asr_fc_ceva_adapter_update_rotation(
         adapter->quaternion[index] = quaternion_scalar_first[index] / norm;
     }
     adapter->accuracy = accuracy;
-    adapter->quaternion_timestamp_us = timestamp_us;
+    adapter->quaternion_timestamp_us = sensor_timestamp_us;
+    adapter->quaternion_received_at_us = received_at_us;
     adapter->has_quaternion = true;
     return ASR_FC_CEVA_ADAPTER_OK;
 }
@@ -78,19 +81,23 @@ asr_fc_ceva_adapter_result_t asr_fc_ceva_adapter_update_rotation(
 asr_fc_ceva_adapter_result_t asr_fc_ceva_adapter_update_gyro(
     asr_fc_ceva_adapter_t *adapter,
     const double angular_rate_rad_s[3],
-    uint64_t timestamp_us) {
+    uint64_t sensor_timestamp_us,
+    uint64_t received_at_us) {
     if (adapter == NULL || angular_rate_rad_s == NULL) {
         return ASR_FC_CEVA_ADAPTER_INVALID_ARGUMENT;
     }
-    if (!finite_vector(angular_rate_rad_s, 3u) || timestamp_us == 0u) {
+    if (!finite_vector(angular_rate_rad_s, 3u) ||
+        sensor_timestamp_us == 0u || received_at_us == 0u) {
         return ASR_FC_CEVA_ADAPTER_INVALID_VALUE;
     }
-    if (adapter->has_gyro && timestamp_us <= adapter->gyro_timestamp_us) {
+    if (adapter->has_gyro &&
+        sensor_timestamp_us <= adapter->gyro_timestamp_us) {
         return ASR_FC_CEVA_ADAPTER_REPEATED_REPORT;
     }
     memcpy(adapter->angular_rate, angular_rate_rad_s,
            sizeof(adapter->angular_rate));
-    adapter->gyro_timestamp_us = timestamp_us;
+    adapter->gyro_timestamp_us = sensor_timestamp_us;
+    adapter->gyro_received_at_us = received_at_us;
     adapter->has_gyro = true;
     return ASR_FC_CEVA_ADAPTER_OK;
 }
@@ -111,11 +118,11 @@ asr_fc_ceva_adapter_result_t asr_fc_ceva_adapter_take_sample(
         adapter->gyro_timestamp_us <= adapter->emitted_gyro_timestamp_us) {
         return ASR_FC_CEVA_ADAPTER_INCOMPLETE;
     }
-    if (now_us < adapter->quaternion_timestamp_us ||
-        now_us < adapter->gyro_timestamp_us ||
-        now_us - adapter->quaternion_timestamp_us >
+    if (now_us < adapter->quaternion_received_at_us ||
+        now_us < adapter->gyro_received_at_us ||
+        now_us - adapter->quaternion_received_at_us >
             adapter->config.max_component_age_us ||
-        now_us - adapter->gyro_timestamp_us >
+        now_us - adapter->gyro_received_at_us >
             adapter->config.max_component_age_us) {
         return ASR_FC_CEVA_ADAPTER_STALE;
     }
@@ -147,6 +154,10 @@ asr_fc_ceva_adapter_result_t asr_fc_ceva_adapter_take_sample(
                                    adapter->gyro_timestamp_us
                                ? adapter->quaternion_timestamp_us
                                : adapter->gyro_timestamp_us;
+    sample->received_at_us = adapter->quaternion_received_at_us >=
+                                     adapter->gyro_received_at_us
+                                 ? adapter->quaternion_received_at_us
+                                 : adapter->gyro_received_at_us;
     memcpy(sample->quaternion, output_quaternion, sizeof(sample->quaternion));
     memcpy(sample->angular_rate, adapter->angular_rate,
            sizeof(sample->angular_rate));

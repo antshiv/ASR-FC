@@ -36,7 +36,8 @@ typedef enum {
 
 typedef struct {
     uint32_t sequence;
-    uint64_t timestamp_us;
+    uint64_t timestamp_us; /* Sensor clock: ordering and control-loop dt. */
+    uint64_t received_at_us; /* Host monotonic clock: freshness only. */
     double quaternion[4]; /* CEVA scalar-first body-to-inertial quaternion. */
     double angular_rate[3];
     double linear_acceleration[3];
