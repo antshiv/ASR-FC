@@ -37,7 +37,7 @@ typedef struct {
     float linear_acceleration[3];
     float guidance_quaternion[4];
     float guidance_angular_rate[3];
-    float collective_thrust_n;
+    float collective_thrust_n; /* Non-negative collective magnitude. */
 } asr_fc_hil_sensor_guidance_t;
 
 typedef struct {
@@ -52,7 +52,7 @@ typedef struct {
     uint16_t motor_q15[4];
     float motor_speed_rad_s[4];
     float body_torque_nm[3];
-    float collective_thrust_n;
+    float collective_thrust_n; /* Non-negative collective magnitude. */
     float observed_quaternion[4];
     float observed_angular_rate[3];
     float observed_linear_acceleration[3];

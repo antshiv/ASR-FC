@@ -1,5 +1,6 @@
 #include "asr_fc/hil/flight_endpoint.h"
 
+#include <math.h>
 #include <string.h>
 
 static void copy_float_to_double(double *output, const float *input,
@@ -96,7 +97,7 @@ asr_fc_hil_status_t asr_fc_hil_flight_endpoint_step(
         .active_aiding_mask = output.active_aiding_mask,
         .step_result = (uint8_t)step,
         .flight_state = (uint8_t)output.state,
-        .collective_thrust_n = (float)output.actuator.collective_thrust,
+        .collective_thrust_n = (float)fabs(output.actuator.collective_thrust),
     };
     memcpy(response->motor_q15, output.motor_q15,
            sizeof(response->motor_q15));
