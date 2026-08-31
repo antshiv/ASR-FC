@@ -131,8 +131,8 @@ asr_fc_step_result_t asr_fc_flight_step(
         enter_failsafe(core, output);
         return ASR_FC_STEP_SENSOR_INVALID;
     }
-    if (now_us < ceva->timestamp_us ||
-        now_us - ceva->timestamp_us > core->config.sensor_timeout_us) {
+    if (ceva->received_at_us == 0u || now_us < ceva->received_at_us ||
+        now_us - ceva->received_at_us > core->config.sensor_timeout_us) {
         enter_failsafe(core, output);
         return ASR_FC_STEP_SENSOR_STALE;
     }

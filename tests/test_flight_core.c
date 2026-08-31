@@ -58,6 +58,7 @@ static asr_fc_ceva_sample_t sample(uint32_t sequence, uint64_t timestamp_us) {
     asr_fc_ceva_sample_t value = {
         .sequence = sequence,
         .timestamp_us = timestamp_us,
+        .received_at_us = timestamp_us,
         .quaternion = {1.0, 0.0, 0.0, 0.0},
         .accuracy = 3u,
         .attitude_valid = true,
@@ -211,6 +212,31 @@ static void test_timing_and_disarm_contract(void) {
     assert(output.state == ASR_FC_FLIGHT_FAILSAFE);
 }
 
+static void test_sensor_and_host_clock_domains_are_independent(void) {
+    int aiding_calls = 0;
+    asr_fc_flight_core_t core;
+    const asr_fc_flight_config_t cfg = config(&aiding_calls);
+    assert(asr_fc_flight_init(&core, &cfg) == ASR_FC_STEP_OK);
+
+    asr_fc_ceva_sample_t ceva = sample(1u, 5000000u);
+    ceva.received_at_us = 4300000000ull;
+    const asr_fc_guidance_t target = guidance(true);
+    asr_fc_flight_output_t output;
+    assert(asr_fc_flight_step(&core, &ceva, NULL, &target, 4300000100ull,
+                              &output) == ASR_FC_STEP_OK);
+
+    ceva = sample(2u, 5040000u);
+    ceva.received_at_us = 4300040000ull;
+    assert(asr_fc_flight_step(&core, &ceva, NULL, &target, 4300040100ull,
+                              &output) == ASR_FC_STEP_OK);
+
+    assert(asr_fc_flight_init(&core, &cfg) == ASR_FC_STEP_OK);
+    ceva = sample(1u, 7000000u);
+    ceva.received_at_us = 200000u;
+    assert(asr_fc_flight_step(&core, &ceva, NULL, &target, 260001u,
+                              &output) == ASR_FC_STEP_SENSOR_STALE);
+}
+
 int main(void) {
     test_ceva_direct_path_and_mixer();
     test_attitude_correction_reaches_mixer();
@@ -218,6 +244,7 @@ int main(void) {
     test_optional_aiding_is_explicit();
     test_invalid_and_stale_samples_fail_closed();
     test_timing_and_disarm_contract();
+    test_sensor_and_host_clock_domains_are_independent();
     puts("flight core tests passed");
     return 0;
 }

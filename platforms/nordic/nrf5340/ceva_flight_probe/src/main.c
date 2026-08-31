@@ -26,6 +26,10 @@ static uint32_t decoded_reports;
 static uint32_t complete_samples;
 static uint32_t rejected_reports;
 
+static uint64_t host_monotonic_us(void) {
+    return k_ticks_to_us_floor64(k_uptime_ticks());
+}
+
 static asr_fc_flight_config_t flight_config(void) {
     asr_fc_flight_config_t config = {
         .attitude_gains = {
@@ -109,6 +113,7 @@ static void sensor_event(void *cookie, sh2_SensorEvent_t *event) {
         return;
     }
     decoded_reports += 1u;
+    const uint64_t received_at_us = host_monotonic_us();
 
     asr_fc_ceva_adapter_result_t result =
         ASR_FC_CEVA_ADAPTER_INVALID_VALUE;
@@ -120,7 +125,8 @@ static void sensor_event(void *cookie, sh2_SensorEvent_t *event) {
             value.un.gameRotationVector.k,
         };
         result = asr_fc_ceva_adapter_update_rotation(
-            &adapter, quaternion, value.status, value.timestamp);
+            &adapter, quaternion, value.status, value.timestamp,
+            received_at_us);
     } else if (value.sensorId == SH2_GYROSCOPE_CALIBRATED) {
         const double angular_rate[3] = {
             value.un.gyroscope.x,
@@ -128,7 +134,7 @@ static void sensor_event(void *cookie, sh2_SensorEvent_t *event) {
             value.un.gyroscope.z,
         };
         result = asr_fc_ceva_adapter_update_gyro(
-            &adapter, angular_rate, value.timestamp);
+            &adapter, angular_rate, value.timestamp, received_at_us);
     } else {
         return;
     }
@@ -136,7 +142,7 @@ static void sensor_event(void *cookie, sh2_SensorEvent_t *event) {
         rejected_reports += 1u;
         return;
     }
-    process_complete_sample(k_cyc_to_us_floor32(k_cycle_get_32()));
+    process_complete_sample(host_monotonic_us());
 }
 
 static int enable_report(sh2_SensorId_t sensor_id) {
