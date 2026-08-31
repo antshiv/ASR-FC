@@ -33,8 +33,27 @@ static bool valid_quaternion(const double quaternion[4]) {
     return isfinite(norm_squared) && norm_squared > 0.81 && norm_squared < 1.21;
 }
 
+static bool collective_axis_sign(const asr_fc_flight_config_t *config,
+                                 double *sign) {
+    const double first = config->rotors[0].axis[2];
+    if (!isfinite(first) || fabs(first) < 1e-9) {
+        return false;
+    }
+    *sign = first < 0.0 ? -1.0 : 1.0;
+    for (size_t index = 1u; index < 4u; ++index) {
+        const double axis_z = config->rotors[index].axis[2];
+        if (!isfinite(axis_z) || axis_z * *sign <= 0.0) {
+            return false;
+        }
+    }
+    return true;
+}
+
 static bool valid_config(const asr_fc_flight_config_t *config) {
-    return config != NULL && isfinite(config->rate_weight) &&
+    double unused_collective_sign = 0.0;
+    return config != NULL &&
+           collective_axis_sign(config, &unused_collective_sign) &&
+           isfinite(config->rate_weight) &&
            config->rate_weight >= 0.0 &&
            isfinite(config->max_rotor_speed_rad_s) &&
            config->max_rotor_speed_rad_s > 0.0 &&
@@ -185,7 +204,13 @@ asr_fc_step_result_t asr_fc_flight_step(
         enter_failsafe(core, output);
         return ASR_FC_STEP_CONTROL_FAILED;
     }
-    output->actuator.collective_thrust = guidance->collective_thrust_n;
+    double collective_sign = 0.0;
+    if (!collective_axis_sign(&core->config, &collective_sign)) {
+        enter_failsafe(core, output);
+        return ASR_FC_STEP_CONTROL_FAILED;
+    }
+    output->actuator.collective_thrust =
+        guidance->collective_thrust_n * collective_sign;
     if (cs_mixer_mix(&core->mixer, &output->actuator,
                      output->motor_speed_rad_s) != 0) {
         enter_failsafe(core, output);

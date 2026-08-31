@@ -14,6 +14,12 @@ acceleration, guidance, arming request, and collective thrust. Responses carry
 the acknowledged sequence, MCU timestamp, execution time, flight state, fault
 state, controller wrench, and four virtual motor commands.
 
+Collective thrust is a non-negative magnitude on the wire. The flight core maps
+that magnitude onto the common thrust-axis sign declared by the four rotor
+records before invoking the geometry-derived mixer. The nRF5340 host endpoint
+uses the same FRD, body-to-NED frame, rotor order, positions, thrust axes, spin
+directions, and coefficients as the `asr-reference-quad` AeroDyn contract.
+
 Host and MCU clocks are intentionally independent. The simulated sensor
 timestamp determines controller `dt`; the MCU timestamp measures the physical
 execution path. A session change resets the controller. Duplicate, corrupt, or

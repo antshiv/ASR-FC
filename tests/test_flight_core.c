@@ -112,6 +112,25 @@ static void test_attitude_correction_reaches_mixer(void) {
                 output.motor_speed_rad_s[2]) > 1e-4);
 }
 
+static void test_collective_follows_declared_rotor_axis(void) {
+    int aiding_calls = 0;
+    asr_fc_flight_core_t core;
+    asr_fc_flight_config_t cfg = config(&aiding_calls);
+    for (size_t index = 0u; index < 4u; ++index) {
+        cfg.rotors[index].axis[2] = -1.0;
+    }
+    assert(asr_fc_flight_init(&core, &cfg) == ASR_FC_STEP_OK);
+    const asr_fc_ceva_sample_t ceva = sample(1u, 100000u);
+    const asr_fc_guidance_t target = guidance(true);
+    asr_fc_flight_output_t output;
+    assert(asr_fc_flight_step(&core, &ceva, NULL, &target, 100100u,
+                              &output) == ASR_FC_STEP_OK);
+    assert(output.actuator.collective_thrust == -4.0);
+    for (size_t index = 0u; index < 4u; ++index) {
+        assert(fabs(output.motor_speed_rad_s[index] - 1.0) < 1e-10);
+    }
+}
+
 static void test_optional_aiding_is_explicit(void) {
     int aiding_calls = 0;
     asr_fc_flight_core_t core;
@@ -195,6 +214,7 @@ static void test_timing_and_disarm_contract(void) {
 int main(void) {
     test_ceva_direct_path_and_mixer();
     test_attitude_correction_reaches_mixer();
+    test_collective_follows_declared_rotor_axis();
     test_optional_aiding_is_explicit();
     test_invalid_and_stale_samples_fail_closed();
     test_timing_and_disarm_contract();

@@ -118,9 +118,33 @@ static void test_duplicate_and_corruption_fail_closed(void) {
     assert(endpoint.flight_core.state == ASR_FC_FLIGHT_DISARMED);
 }
 
+static void test_wire_magnitude_maps_to_negative_body_axis(void) {
+    asr_fc_hil_flight_endpoint_t endpoint;
+    asr_fc_flight_config_t cfg = config();
+    for (size_t index = 0u; index < 4u; ++index) {
+        cfg.rotors[index].axis[2] = -1.0;
+    }
+    assert(asr_fc_hil_flight_endpoint_init(&endpoint, &cfg) ==
+           ASR_FC_STEP_OK);
+
+    uint8_t frame[ASR_FC_HIL_MAX_FRAME_SIZE];
+    const size_t size = request_frame(9u, 1u, 10000u, true, frame);
+    uint32_t sequence = 0u;
+    asr_fc_hil_flight_output_t response;
+    assert(asr_fc_hil_flight_endpoint_step(
+        &endpoint, frame, size, 500u, &sequence, &response) ==
+        ASR_FC_HIL_OK);
+    assert(response.step_result == ASR_FC_STEP_OK);
+    assert(endpoint.flight_core.state == ASR_FC_FLIGHT_ARMED);
+    assert(endpoint.flight_core.config.rotors[0].axis[2] == -1.0);
+    assert(response.collective_thrust_n == 11.76798f);
+    assert(response.motor_q15[0] > 0u);
+}
+
 int main(void) {
     test_lockstep_and_session_reset();
     test_duplicate_and_corruption_fail_closed();
+    test_wire_magnitude_maps_to_negative_body_axis();
     puts("ASR-FC HIL flight endpoint tests passed");
     return 0;
 }

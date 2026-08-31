@@ -54,7 +54,7 @@ typedef struct {
 typedef struct {
     double quaternion[4];
     double angular_rate[3];
-    double collective_thrust_n;
+    double collective_thrust_n; /* Non-negative magnitude; rotor axes own sign. */
     bool arm_requested;
 } asr_fc_guidance_t;
 

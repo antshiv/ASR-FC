@@ -34,14 +34,14 @@ static asr_fc_flight_config_t flight_config(void) {
         .minimum_ceva_accuracy = 1u,
     };
     const double positions[4][3] = {
-        {0.18, 0.18, 0.0}, {-0.18, 0.18, 0.0},
-        {-0.18, -0.18, 0.0}, {0.18, -0.18, 0.0},
+        {0.18, 0.18, 0.0}, {0.18, -0.18, 0.0},
+        {-0.18, -0.18, 0.0}, {-0.18, 0.18, 0.0},
     };
     const double directions[4] = {1.0, -1.0, 1.0, -1.0};
     for (size_t index = 0u; index < 4u; ++index) {
         memcpy(config.rotors[index].position, positions[index],
                sizeof(positions[index]));
-        config.rotors[index].axis[2] = 1.0;
+        config.rotors[index].axis[2] = -1.0;
         config.rotors[index].direction = directions[index];
         config.rotors[index].thrust_coeff = 8.0e-6;
         config.rotors[index].torque_coeff = 1.2e-7;
