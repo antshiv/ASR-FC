@@ -60,6 +60,34 @@ ASR_FC_CEVA_HEALTH decoded=3604 complete=1802 rejected=0 physical_outputs=0
 Every sampled controller result in the capture remained `step=0`. The image
 used 47,264 bytes of flash (4.51%) and 20,576 bytes of RAM (4.49%).
 
+## nRF Connect SDK 3.4.0 validation - 2026-08-31
+
+The latest stable Nordic SDK and its matching toolchain were installed
+side-by-side with 2.4.2. The same motor-disabled source built against nRF
+Connect SDK 3.4.0, Zephyr 4.4.0, West 1.5.0, GCC 14.3.0, and Zephyr SDK 1.0.1.
+The qualified board target changed to `nrf5340dk/nrf5340/cpuapp`.
+
+```bash
+nrfutil sdk-manager toolchain launch --ncs-version v3.4.0 -- \
+  west build --pristine \
+  -b nrf5340dk/nrf5340/cpuapp \
+  platforms/nordic/nrf5340/ceva_flight_probe
+```
+
+The 3.4.0 image used 53,332 bytes of flash (5.09%) and 20,488 bytes of RAM
+(4.47%). It was erased, programmed, verified, reset, and exercised with the
+physical FSM300. A clean post-reset trace crossed the former cycle-counter
+wrap boundary and reached:
+
+```text
+ASR_FC_CEVA_HEALTH decoded=1862 complete=931 rejected=0 physical_outputs=0
+```
+
+All sampled controller results remained `step=0`. Zephyr 4.4.0 warns that it
+selects Picolibc rather than the probe's requested Newlib configuration. The
+image builds and runs, but libc selection remains an explicit follow-up rather
+than being silently changed in this validation.
+
 ## Reproduction
 
 ```bash

@@ -28,12 +28,16 @@ The wiring matches the existing BLEDrone FSM300 prototype:
 | FSM300 BOOTN | P1.10 |
 | FSM300 WAKEN | P1.11 |
 
-Build from an initialized nRF Connect SDK shell:
+Build from an initialized nRF Connect SDK 3.4.0 shell:
 
 ```bash
-west build -b nrf5340dk_nrf5340_cpuapp \
+west build -b nrf5340dk/nrf5340/cpuapp \
   platforms/nordic/nrf5340/ceva_flight_probe
 ```
+
+nRF Connect SDK 2.4.2 uses the legacy board target
+`nrf5340dk_nrf5340_cpuapp`. Keep the SDK and board target paired; do not infer
+one target spelling works across both Zephyr generations.
 
 Do not flash over a working board image until its binary and serial evidence
 have been archived.
