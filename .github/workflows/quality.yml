@@ -16,6 +16,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Check validation harness failure propagation
+        run: scripts/test_validation_harness.sh
       - name: Build and test motor-link contracts
         env:
           ASR_FC_ENABLE_SANITIZERS: ON
