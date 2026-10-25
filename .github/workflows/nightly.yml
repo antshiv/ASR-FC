@@ -10,13 +10,13 @@ permissions:
 
 jobs:
   native-contracts:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         compiler: [gcc, clang]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
       - name: Check validation harness failure propagation
@@ -33,7 +33,7 @@ jobs:
       - name: Publish job summary
         if: success()
         run: cat artifacts/nightly-${{ matrix.compiler }}/summary.md >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: asr-fc-nightly-${{ matrix.compiler }}
@@ -41,9 +41,9 @@ jobs:
           retention-days: 30
 
   embedded-contracts:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install Arm GNU toolchain
         run: |
           sudo apt-get update

@@ -11,9 +11,9 @@ permissions:
 
 jobs:
   protocol:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
       - name: Check validation harness failure propagation
@@ -22,16 +22,16 @@ jobs:
         env:
           ASR_FC_ENABLE_SANITIZERS: ON
         run: scripts/run_validation.sh artifacts/pull-request
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: asr-fc-pull-request-evidence
           path: artifacts/pull-request
 
   embedded-protocol:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install Arm GNU toolchain
         run: |
           sudo apt-get update
