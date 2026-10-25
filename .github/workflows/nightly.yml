@@ -2,7 +2,7 @@ name: Nightly flight-control evidence
 
 on:
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '17 2 * * *'
   workflow_dispatch:
 
 permissions:
@@ -19,6 +19,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Check validation harness failure propagation
+        run: scripts/test_validation_harness.sh
       - name: Install compiler
         run: |
           sudo apt-get update
@@ -29,8 +31,10 @@ jobs:
           ASR_FC_ENABLE_SANITIZERS: ON
         run: scripts/run_validation.sh artifacts/nightly-${{ matrix.compiler }}
       - name: Publish job summary
+        if: success()
         run: cat artifacts/nightly-${{ matrix.compiler }}/summary.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: asr-fc-nightly-${{ matrix.compiler }}
           path: artifacts/nightly-${{ matrix.compiler }}
